@@ -7,12 +7,11 @@ import java.util.Scanner;
 
 public class ClientHandler {
 
-    private static ServerSocket server = null;
     private static Socket socket = null;
     private static DataInputStream in;
     private static DataOutputStream out;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         Scanner sc = new Scanner(System.in);
 
@@ -24,40 +23,14 @@ public class ClientHandler {
             out = new DataOutputStream(socket.getOutputStream()); // то, что отправляет клиент
 
 
-            new Thread(() -> { //поток для считывания сообщения от сервера
-                try {
-                    while (true) {
-                        String str = in.readUTF(); // считать сообщение от сервера
-                        if (str.equals("/end")) {
-                            break;
-                        }
-                        System.out.println("Сервер говорит: " + str);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+            ThreadForRead t1 = new ThreadForRead("Сервер", in); //поток приема сообщений от сервера
+            t1.start();
 
-
-            new Thread(() -> {
-                while (true) {
-                    String str;
-                    str = sc.nextLine();
-                    if (str.equals("/end")) {
-                        break;
-                    }
-                    try {
-                        out.writeUTF(str);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-
+            ThreadForWrite t2 = new ThreadForWrite(out, sc);  // поток отправки сообщений
+            t2.start();
 
         } catch(IOException e) {
             e.printStackTrace();
         }
     }
 }
-

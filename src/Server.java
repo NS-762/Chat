@@ -26,40 +26,13 @@ public class Server {
             in = new DataInputStream(socket.getInputStream()); // то, что приходит на сервер (считывание)
             out = new DataOutputStream(socket.getOutputStream()); // то, что отправляет сервер
 
+            ThreadForRead t1 = new ThreadForRead("Клиент", in); // поток приема сообщений от клиента
+            t1.start();
 
-                /*Scanner in = new Scanner(socket.getInputStream()); //слушать входящий поток из сокета
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true); // то, что печатает сервер*/
+            ThreadForWrite t2 = new ThreadForWrite(out, sc); // поток отправки сообщений
+            t2.start();
 
-            new Thread(() -> { //поток для считывания сообщения от клиента
-                try {
-                    while (true) {
-                        String str = in.readUTF(); // считать сообщение от клиента
-                        if (str.equals("/end")) {
-                            break;
-                        }
-                        System.out.println("Клиент говорит: " + str);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-
-
-            new Thread(() -> { //поток для отправки сообщения клиенту
-                while (true) {
-                    String str;
-                    str = sc.nextLine();
-                    if (str.equals("/end")) {
-                        break;
-                    }
-                    try {
-                        out.writeUTF(str);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-
+            t2.interrupt();
 
         } catch(IOException e) {
             e.printStackTrace();
