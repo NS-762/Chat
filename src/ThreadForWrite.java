@@ -6,6 +6,7 @@ public class ThreadForWrite extends Thread {
 
     private DataOutputStream out;
     private Scanner sc;
+    private String str;
 
     public ThreadForWrite(DataOutputStream out, Scanner sc) {
         this.out = out;
@@ -14,16 +15,14 @@ public class ThreadForWrite extends Thread {
 
     public void run() {
         while (true) {
-            String str;
-            str = sc.nextLine();
 
+            str = sc.nextLine();
 
             try {
                 out.writeUTF(str);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
 
         }
     }

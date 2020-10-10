@@ -32,7 +32,6 @@ public class Server {
             ThreadForWrite t2 = new ThreadForWrite(out, sc); // поток отправки сообщений
             t2.start();
 
-            t2.interrupt();
 
         } catch(IOException e) {
             e.printStackTrace();
@@ -40,4 +39,3 @@ public class Server {
 
     }
 }
-

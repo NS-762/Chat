@@ -14,7 +14,7 @@ public class ThreadForRead extends Thread {
     public void run() {
         try {
             while (true) {
-                String str = in.readUTF(); // считать сообщение от клиента
+                String str = in.readUTF(); // считать сообщение
                 System.out.println(sender + " говорит: " + str);
             }
         } catch (IOException e) {
