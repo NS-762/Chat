@@ -25,7 +25,7 @@ public class ClientHandler {
 
             new Thread(() -> {
                 try {
-                    while (true) {
+                    while (!socket.isClosed()) {
                         String str = in.readUTF();
                         if(str.equals("/end")) {
                             sendMessage(str);
@@ -43,7 +43,7 @@ public class ClientHandler {
                         in.close();
                         out.close();
                         socket.close();
-                        server.deleteClient(this);
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -67,6 +67,10 @@ public class ClientHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean clientIsOff() {
+        return socket.isClosed();
     }
 
 }

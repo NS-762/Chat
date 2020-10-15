@@ -23,9 +23,14 @@ public class Server {
 
             scan = new Scanner(System.in);
 
+
             new Thread(() -> { //поток для отправки сообщений на клиентхендлер
-                while (socket.isConnected()) {
+                while (true) {
                     str = scan.nextLine();
+                    if (client1.clientIsOff()) {
+                        System.out.println("Невозможно отправить сообщение данному клиенту");
+                        break;
+                    }
                     client1.sendMessage(str); //прекинуть в клиентхендлер
                 }
             }).start();
@@ -45,11 +50,7 @@ public class Server {
 
 
     public void acceptMessage(String str) { //принять сообщение
-        /*Main.textOutput(str); // отправить в мейн, чтобы напечатать сообщение в консоль*/
         System.out.println(str);
     }
 
-    public void deleteClient(ClientHandler clientHandler) {
-        clientHandler = null;
-    }
 }
