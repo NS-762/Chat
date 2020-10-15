@@ -6,30 +6,67 @@ import java.util.Scanner;
 
 public class ClientHandler {
 
-    private static Socket socket = null;
-    private static DataInputStream in;
-    private static DataOutputStream out;
+    private Server server = null;
+    private Socket socket = null;
+    private DataInputStream in;
+    private DataOutputStream out;
+    private Scanner scan;
 
-    public static void main(String[] args) throws IOException {
 
-        Scanner sc = new Scanner(System.in);
+    public ClientHandler(Server server, Socket socket) {
+        this.server = server;
+        this.socket = socket;
+
+        scan = new Scanner(System.in);
 
         try {
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
 
-            socket = new Socket("localHost", 8189);
+            new Thread(() -> {
+                try {
+                    while (true) {
+                        String str = in.readUTF();
+                        if(str.equals("/end")) {
+                            sendMessage(str);
+                            break;
+                        }
 
-            in = new DataInputStream(socket.getInputStream()); // то, что приходит клиенту (считывание)
-            out = new DataOutputStream(socket.getOutputStream()); // то, что отправляет клиент
+                        server.acceptMessage("Клиент говорит: " + str); // перекинуть сообщение на сервер
+
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        server.acceptMessage("Клиент отключился");
+                        in.close();
+                        out.close();
+                        socket.close();
+                        server.deleteClient(this);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
 
 
-            ThreadForRead t1 = new ThreadForRead("Сервер", in); //поток приема сообщений от сервера
-            t1.start();
 
-            ThreadForWrite t2 = new ThreadForWrite(out, sc);  // поток отправки сообщений
-            t2.start();
 
-        } catch(IOException e) {
+            }).start();
+
+
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    public void sendMessage(String str) { //отправка сообщения клиенту от сервера
+        try {
+            out.writeUTF(str);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

@@ -1,41 +1,55 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
 public class Server {
 
-    private static ServerSocket server = null;
-    private static Socket socket = null;
-    private static DataInputStream in;
-    private static DataOutputStream out;
+    private ServerSocket server = null;
+    private Socket socket = null;
+    private Scanner scan;
+    private String str;
 
-    public static void main(String[] args) {
-
-        Scanner sc = new Scanner(System.in);
+    public Server() {
 
         try {
-            server = new ServerSocket(8189); // создание сервера
+            server = new ServerSocket(8191); // создание сервера
             System.out.println("Сервер запустился");
+
             socket = server.accept(); // в сокет записываем подключившегося пользователя
             System.out.println("Клиент подключился");
 
-            in = new DataInputStream(socket.getInputStream()); // то, что приходит на сервер (считывание)
-            out = new DataOutputStream(socket.getOutputStream()); // то, что отправляет сервер
+            ClientHandler client1 = new ClientHandler(this, socket);
 
-            ThreadForRead t1 = new ThreadForRead("Клиент", in); // поток приема сообщений от клиента
-            t1.start();
+            scan = new Scanner(System.in);
 
-            ThreadForWrite t2 = new ThreadForWrite(out, sc); // поток отправки сообщений
-            t2.start();
+            new Thread(() -> { //поток для отправки сообщений на клиентхендлер
+                while (socket.isConnected()) {
+                    str = scan.nextLine();
+                    client1.sendMessage(str); //прекинуть в клиентхендлер
+                }
+            }).start();
 
 
         } catch(IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                server.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
+    }
+
+
+    public void acceptMessage(String str) { //принять сообщение
+        /*Main.textOutput(str); // отправить в мейн, чтобы напечатать сообщение в консоль*/
+        System.out.println(str);
+    }
+
+    public void deleteClient(ClientHandler clientHandler) {
+        clientHandler = null;
     }
 }
