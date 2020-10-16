@@ -8,14 +8,16 @@ public class ClientHandler {
 
     private Server server = null;
     private Socket socket = null;
+    private int number;
     private DataInputStream in;
     private DataOutputStream out;
     private Scanner scan;
 
 
-    public ClientHandler(Server server, Socket socket) {
+    public ClientHandler(Server server, Socket socket, int number) {
         this.server = server;
         this.socket = socket;
+        this.number = number;
 
         scan = new Scanner(System.in);
 
@@ -29,17 +31,18 @@ public class ClientHandler {
                         String str = in.readUTF();
                         if(str.equals("/end")) {
                             sendMessage(str);
+                            server.deleteClient(this, number);
                             break;
                         }
 
-                        server.acceptMessage("Клиент говорит: " + str); // перекинуть сообщение на сервер
+                        server.acceptAndSendMessage("Клиент №"+ number + ": " + str); // перекинуть сообщение на сервер
 
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     try {
-                        server.acceptMessage("Клиент отключился");
+                        /*server.acceptMessage("Клиент отключился");*/
                         in.close();
                         out.close();
                         socket.close();
@@ -67,10 +70,6 @@ public class ClientHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public boolean clientIsOff() {
-        return socket.isClosed();
     }
 
 }
