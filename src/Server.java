@@ -21,14 +21,11 @@ public class Server {
 
         try {
             authService = new SimpleAuthService(); //для аутентификации
-
             clients = new Vector<>();
             scan = new Scanner(System.in);
             server = new ServerSocket(8191); // создание сервера
 
-
             System.out.println("Сервер запустился");
-
 
             new Thread(() -> { //поток для отправки сообщений на клиентхендлеры
                 while (true) {
@@ -40,9 +37,7 @@ public class Server {
                         } else {
                             c.sendMessageClient( str);
                         }
-
                     }
-
                 }
             }).start();
 
@@ -53,7 +48,6 @@ public class Server {
                     e.printStackTrace();
                 }
                 new ClientHandler(this, socket);
-
             }
 
         } catch (IOException e) {
@@ -65,7 +59,6 @@ public class Server {
                 e.printStackTrace();
             }
         }
-
     }
 
     public void acceptAndSendMessage(String message) { //принять сообщение, напечатать и отправить всем клиентам
@@ -73,7 +66,6 @@ public class Server {
         for (ClientHandler c : clients) {
             c.sendMessageClient(message);
         }
-
     }
 
     public void sendPrivateMessage(String nickname, String message) {
@@ -84,8 +76,6 @@ public class Server {
         }
     }
 
-
-
     public void subscribe(ClientHandler clientHandler) {
         clients.add(clientHandler);
     }
@@ -93,6 +83,10 @@ public class Server {
     public void unsubscribe(ClientHandler clientHandler, String nickname) {
         clients.remove(clientHandler);
         System.out.printf("Клиент №%s отключился\n", nickname);
+    }
+
+    public void print(String str) {
+        System.out.println(str);
     }
 
 }

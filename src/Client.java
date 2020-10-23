@@ -15,7 +15,7 @@ public class Client {
 
     public static void main(String[] args) {
 
-       /* authenticated = false; //изначально пользолватель не аутентифицирован*/
+        authenticated = false; //изначально пользолватель не аутентифицирован
         try {
             socket = new Socket("localHost", 8191);
             scan = new Scanner(System.in);
@@ -28,6 +28,7 @@ public class Client {
             while (true) { //цикл аутентификации
                 String str = scan.nextLine();
                 out.writeUTF("/auth " + str); //прекинуть в клиентхендлер логин и пароль
+                System.out.println("Запрос отправлен на клиентхендлера!");
                 str = in.readUTF(); //ждать ответа от клинтхенедлера и сервера
                 if (str.startsWith("/authok")) { //если пришло одобрение, то выходим из этого цикла: аутентиф. успешна
                     nickname = str.split(" ")[1]; //взять то, что после /authok
@@ -44,14 +45,13 @@ public class Client {
                             if (!str.equals("")) {
                                 out.writeUTF(str); //прекинуть в клиентхендлер
                             }
-
                         }
                     } catch (IOException e) {
                         System.out.println("Невозможно отправить сообщение");
                     } finally {
                         try {
                             in.close();
-                            out.close(); //он в отправке не обрабатывается так
+                            out.close();
                             socket.close();
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -59,7 +59,6 @@ public class Client {
 
                     }
             }).start();
-
 
             new Thread (() -> { //для приема сообщений
                     try {
@@ -85,11 +84,9 @@ public class Client {
                     }
             }).start();
 
-
         } catch (Exception e) {
             e.printStackTrace();
+
         }
-
-
     }
 }

@@ -1,3 +1,5 @@
+import com.sun.xml.internal.ws.api.model.wsdl.WSDLOutput;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -25,13 +27,20 @@ public class ClientHandler {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
-            while (true) { //цикл аутентификации
+
+
+           /* while (true) { //цикл аутентификации
                 String str = in.readUTF();
+                server.print("Пришел запрос на логин и пароль");
+
                 if(str.startsWith("/auth")) {
                     String[] token = str.split(" ");
                     String nick = server.getAuthService().getNickByLoginAndPassword(token[1], token[2]);
+
                     if (nick != null) {
+                        server.print("Такой логин и пароль найдены");
                         sendMessageClient("/authok "+ nick);
+                        server.print("Такой логин и пароль отправлены");
                         nickname = nick;
                         login = token[1];
                         server.subscribe(this); //добавить клиента в список
@@ -41,12 +50,32 @@ public class ClientHandler {
                         sendMessageClient("/error");
                     }
                 }
-            }
+            }*/
 
 
 
             new Thread(() -> {
                 try {
+                    while (true) { //цикл аутентификации
+                        String str = in.readUTF();
+
+                        if (str.startsWith("/auth")) {
+                            String[] token = str.split(" ");
+                            String nick = server.getAuthService().getNickByLoginAndPassword(token[1], token[2]);
+
+                            if (nick != null) {
+                                sendMessageClient("/authok " + nick);
+                                nickname = nick;
+                                login = token[1];
+                                server.subscribe(this); //добавить клиента в список
+                                server.acceptAndSendMessage(nickname + " подключился к чату"); // перекинуть сообщение на сервер
+                                break;
+                            } else {
+                                sendMessageClient("/error");
+                            }
+                        }
+                    }
+
                     while (!socket.isClosed()) {
                         String str = in.readUTF();
                         if(str.equals("/end")) {
@@ -74,14 +103,7 @@ public class ClientHandler {
                         e.printStackTrace();
                     }
                 }
-
-
-
-
             }).start();
-
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -94,5 +116,4 @@ public class ClientHandler {
             e.printStackTrace();
         }
     }
-
 }

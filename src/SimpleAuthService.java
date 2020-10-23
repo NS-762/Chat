@@ -3,7 +3,6 @@ import java.util.List;
 
 public class SimpleAuthService implements AuthService {
 
-
     private class UserData {
         String login;
         String password;
@@ -17,7 +16,6 @@ public class SimpleAuthService implements AuthService {
     }
 
     private List<UserData> users;
-
 
     public SimpleAuthService() { //массив логинов, паролей, никнеймов
         users = new ArrayList<>();
