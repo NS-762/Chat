@@ -10,33 +10,24 @@ public class Server {
     private Socket socket = null;
     private Scanner scan;
     private String str;
-    private int numberOfClients;
     private Vector<ClientHandler> clients;
+    private AuthService authService;
+
+    public AuthService getAuthService() {
+        return authService;
+    }
 
     public Server() {
 
         try {
+            authService = new SimpleAuthService(); //для аутентификации
+
             clients = new Vector<>();
             scan = new Scanner(System.in);
             server = new ServerSocket(8191); // создание сервера
+
+
             System.out.println("Сервер запустился");
-
-
-            /*new Thread(() -> { //в потоке не работает прием клиентов
-
-                int i = 1;
-                while (true) {
-                    try {
-                        socket = server.accept(); // в сокет записываем подключившегося пользователя
-                    } catch (IOException e) {
-                        System.out.println("Вот проблема");
-                        e.printStackTrace();
-                    }
-                    System.out.printf("Клиент №%d подключился", i);
-                    clients.add(new ClientHandler(this, socket, i));
-                }
-
-            }).start();*/
 
 
             new Thread(() -> { //поток для отправки сообщений на клиентхендлеры
@@ -45,9 +36,9 @@ public class Server {
 
                     for (ClientHandler c : clients) {
                         if (!str.equals("/end")) { //чтоб правильно считалась команда на клиентхендлере
-                            c.sendMessage("Сервер пишет: " + str);
+                            c.sendMessageClient("Сервер пишет: " + str);
                         } else {
-                            c.sendMessage( str);
+                            c.sendMessageClient( str);
                         }
 
                     }
@@ -57,18 +48,13 @@ public class Server {
 
             while (true) { //для добавления клиентов
                 try {
-                    socket = server.accept(); // в сокет записываем подключившегося пользователя
-                    numberOfClients++;
+                    socket = server.accept(); //в сокет записываем подключившегося пользователя
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                System.out.printf("Клиент №%d подключился\n", numberOfClients);
-                clients.add(new ClientHandler(this, socket, numberOfClients));
+                new ClientHandler(this, socket);
 
             }
-
-
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -82,18 +68,31 @@ public class Server {
 
     }
 
-
-    public void acceptAndSendMessage(String str) { //принять сообщение, напечатать и отправить всем клиентам
-        System.out.println(str);
+    public void acceptAndSendMessage(String message) { //принять сообщение, напечатать и отправить всем клиентам
+        System.out.println(message);
         for (ClientHandler c : clients) {
-            c.sendMessage(str);
+            c.sendMessageClient(message);
         }
 
     }
 
-    public void deleteClient(ClientHandler clientHandler, int number) {
+    public void sendPrivateMessage(String nickname, String message) {
+        for (ClientHandler c : clients) {
+            if (c.nickname.equals(nickname)) {
+                c.sendMessageClient(message);
+            }
+        }
+    }
+
+
+
+    public void subscribe(ClientHandler clientHandler) {
+        clients.add(clientHandler);
+    }
+
+    public void unsubscribe(ClientHandler clientHandler, String nickname) {
         clients.remove(clientHandler);
-        System.out.printf("Клиент №%d удален\n", number);
+        System.out.printf("Клиент №%s отключился\n", nickname);
     }
 
 }
