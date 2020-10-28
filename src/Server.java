@@ -82,7 +82,7 @@ public class Server {
 
     public void unsubscribe(ClientHandler clientHandler, String nickname) {
         clients.remove(clientHandler);
-        System.out.printf("Клиент №%s отключился\n", nickname);
+        System.out.printf("Клиент %s отключился\n", nickname);
     }
 
     public void print(String str) {

@@ -39,16 +39,19 @@ public class ClientHandler {
 
                         if (str.startsWith("/auth")) {
                             String[] token = str.split(" ");
-                            String nick = server.getAuthService().getNickByLoginAndPassword(token[1], token[2]);
-
-                            if (nick != null) {
-                                sendMessageClient("/authok " + nick);
-                                nickname = nick;
-                                login = token[1];
-                                server.subscribe(this); //добавить клиента в список
-                                subscribe = true;
-                                server.acceptAndSendMessage(nickname + " подключился к чату"); // перекинуть сообщение на сервер
-                                break;
+                            if (token.length == 3) {
+                                String nick = server.getAuthService().getNickByLoginAndPassword(token[1], token[2]);
+                                if (nick != null) {
+                                    sendMessageClient("/authok " + nick);
+                                    nickname = nick;
+                                    login = token[1];
+                                    server.subscribe(this); //добавить клиента в список
+                                    subscribe = true;
+                                    server.acceptAndSendMessage(nickname + " подключился к чату"); // перекинуть сообщение на сервер
+                                    break;
+                                } else {
+                                    sendMessageClient("/error");
+                                }
                             } else {
                                 sendMessageClient("/error");
                             }

@@ -39,7 +39,7 @@ public class Client {
                             authenticated = true;
                             break;
                         } else if (str.equals("/timeOut")) { //время аутентификации вышло
-                            System.out.println("\nВремя ожидания вышло");
+                            System.out.println("\nВремя авторизации вышло");
                             break;
                         } else {
                             System.out.println("Неверный логин или пароль. Повторите попытку:");
@@ -90,7 +90,7 @@ public class Client {
                         }
                     }
                 } catch (IOException e) {
-                    System.out.println("Невозможно отправить сообщение");
+                    System.out.println("Ошибка отправки");
                 } finally {
                     try {
                         in.close();
@@ -102,11 +102,6 @@ public class Client {
 
                 }
             }).start();
-
-
-        } catch (SocketException e) {
-            System.out.println("Ошибка: время ожидания вышло");
-
         } catch (Exception e) {
             e.printStackTrace();
 
