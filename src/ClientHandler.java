@@ -30,7 +30,7 @@ public class ClientHandler {
             out = new DataOutputStream(socket.getOutputStream());
 
 
-            socket.setSoTimeout(5000);
+            socket.setSoTimeout(120000);
 
             new Thread(() -> {
                 try {
