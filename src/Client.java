@@ -2,6 +2,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Scanner;
 
 public class Client {
@@ -15,7 +17,7 @@ public class Client {
 
     public static void main(String[] args) {
 
-        authenticated = false; //изначально пользолватель не аутентифицирован
+        authenticated = false; //изначально пользователь не аутентифицирован
         try {
             socket = new Socket("localHost", 8191);
             scan = new Scanner(System.in);
@@ -25,45 +27,28 @@ public class Client {
 
             System.out.println("Введите логин и пароль через пробел:");
 
-            while (true) { //цикл аутентификации
-                String str = scan.nextLine();
-                out.writeUTF("/auth " + str); //прекинуть в клиентхендлер логин и пароль
-                System.out.println("Запрос отправлен на клиентхендлера!");
-                str = in.readUTF(); //ждать ответа от клинтхенедлера и сервера
-                if (str.startsWith("/authok")) { //если пришло одобрение, то выходим из этого цикла: аутентиф. успешна
-                    nickname = str.split(" ")[1]; //взять то, что после /authok
-                    break;
-                } else {
-                    System.out.println("Неверный логин или пароль. Повторите попытку:");
-                }
-            }
 
-            new Thread(() -> { //отправка сообщений в клиентхендлер
-                    try {
-                        while (true) {
-                            String str = scan.nextLine();
-                            if (!str.equals("")) {
-                                out.writeUTF(str); //прекинуть в клиентхендлер
-                            }
-                        }
-                    } catch (IOException e) {
-                        System.out.println("Невозможно отправить сообщение");
-                    } finally {
-                        try {
-                            in.close();
-                            out.close();
-                            socket.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+            new Thread(() -> { //для приема сообщений
+                try {
+                    String str;
 
+                    while (true) { //цикл аутентификации
+                        str = in.readUTF();
+                        if (str.startsWith("/authok")) { //если пришло одобрение, то выходим из этого цикла: аутентиф. успешна
+                            nickname = str.split(" ")[1]; //взять то, что после /authok
+                            authenticated = true;
+                            break;
+                        } else if (str.equals("/timeOut")) { //время аутентификации вышло
+                            System.out.println("\nВремя ожидания вышло");
+                            break;
+                        } else {
+                            System.out.println("Неверный логин или пароль. Повторите попытку:");
+                        }
                     }
-            }).start();
 
-            new Thread (() -> { //для приема сообщений
-                    try {
-                        while (true) {
-                            String str = in.readUTF();
+                    if (!str.equals("/timeOut")){ //сюда заходит, только если время аутентификации не вышло
+                        while (true) { //цикл работы
+                            str = in.readUTF();
                             if (str.equals("/end")) {
                                 System.out.println("Отключение от сервера");
                                 out.writeUTF(str); //чтобы вырубился и на клиентхендлере
@@ -71,18 +56,56 @@ public class Client {
                             }
                             System.out.println(str);
                         }
-                    } catch (IOException e) {
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        in.close();
+                        out.close();
+                        socket.close();
+                    } catch (Exception e) {
                         e.printStackTrace();
-                    } finally {
-                        try {
-                            in.close();
-                            out.close();
-                            socket.close();
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                    }
+                }
+            }).start();
+
+            new Thread(() -> { //отправка сообщений в клиентхендлер
+                try {
+
+                    while (!authenticated) { //цикл аутентификации
+                        String str = scan.nextLine();
+                        if (!authenticated)
+                            out.writeUTF("/auth " + str); //прекинуть в клиентхендлер логин и пароль
+                        else {
+                            out.writeUTF(str);
+                            break;
                         }
                     }
+
+                    while (true) { //цикл работы
+                        String str = scan.nextLine();
+                        if (!str.equals("")) {
+                            out.writeUTF(str); //прекинуть в клиентхендлер
+                        }
+                    }
+                } catch (IOException e) {
+                    System.out.println("Невозможно отправить сообщение");
+                } finally {
+                    try {
+                        in.close();
+                        out.close();
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
             }).start();
+
+
+        } catch (SocketException e) {
+            System.out.println("Ошибка: время ожидания вышло");
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.Scanner;
 
 public class ClientHandler {
@@ -15,6 +16,7 @@ public class ClientHandler {
     private Scanner scan;
     private String login;
     public String nickname;
+    private boolean subscribe = false;
 
 
     public ClientHandler(Server server, Socket socket) {
@@ -28,31 +30,7 @@ public class ClientHandler {
             out = new DataOutputStream(socket.getOutputStream());
 
 
-
-           /* while (true) { //цикл аутентификации
-                String str = in.readUTF();
-                server.print("Пришел запрос на логин и пароль");
-
-                if(str.startsWith("/auth")) {
-                    String[] token = str.split(" ");
-                    String nick = server.getAuthService().getNickByLoginAndPassword(token[1], token[2]);
-
-                    if (nick != null) {
-                        server.print("Такой логин и пароль найдены");
-                        sendMessageClient("/authok "+ nick);
-                        server.print("Такой логин и пароль отправлены");
-                        nickname = nick;
-                        login = token[1];
-                        server.subscribe(this); //добавить клиента в список
-                        server.acceptAndSendMessage(nickname + " подключился к чату"); // перекинуть сообщение на сервер
-                        break;
-                    } else {
-                        sendMessageClient("/error");
-                    }
-                }
-            }*/
-
-
+            socket.setSoTimeout(5000);
 
             new Thread(() -> {
                 try {
@@ -68,6 +46,7 @@ public class ClientHandler {
                                 nickname = nick;
                                 login = token[1];
                                 server.subscribe(this); //добавить клиента в список
+                                subscribe = true;
                                 server.acceptAndSendMessage(nickname + " подключился к чату"); // перекинуть сообщение на сервер
                                 break;
                             } else {
@@ -76,10 +55,12 @@ public class ClientHandler {
                         }
                     }
 
+                    socket.setSoTimeout(0);
+
                     while (!socket.isClosed()) {
                         String str = in.readUTF();
-                        if(str.equals("/end")) {
-                            sendMessageClient(str); //отправить клиенту
+                        if (str.equals("/end")) {
+                            sendMessageClient(str); //отправить клиенту сообщение о закрытии
                             break;
                         }
                         if (str.startsWith("/w")) { //для личных сообщений
@@ -90,11 +71,15 @@ public class ClientHandler {
                         }
 
                     }
+                } catch (SocketTimeoutException e) {
+                    sendMessageClient("/timeOut"); //отправить сообщение, что время ожидания вышло
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     try {
-                        server.unsubscribe(this, nickname);
+                        if (subscribe) { //если клиент был подписан на сервер, то удалить из подписок
+                            server.unsubscribe(this, nickname);
+                        }
                         in.close();
                         out.close();
                         socket.close();
@@ -104,6 +89,7 @@ public class ClientHandler {
                     }
                 }
             }).start();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
